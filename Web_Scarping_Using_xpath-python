@@ -1,0 +1,27 @@
+%config IPcompleter.greedy = True
+import pandas as pd
+import numpy as np
+import requests
+from lxml import html
+
+bizName = []
+bizPhone = []
+bizStreet = []
+for j in range(0,181,30):
+    url = 'https://www.yelp.com/search?find_loc=Chicago,+IL&start='+str(j)+'&cflt=indpak'
+    print (url)
+    tree = html.fromstring(requests.get(url).content)
+    for i in range(2,32):
+        bizN = tree.xpath('//*[@id="super-container"]/div/div[2]/div[1]/div/div[4]/ul[2]/li['+str(i)+ \
+                             ']/div/div/div/div[2]/div[1]/div[1]/h3/span/a/span/text()')
+        bizP = tree.xpath('//*[@id="super-container"]/div/div[2]/div[1]/div/div[4]/ul[2]/li['+str(i)+ \
+                              ']/div/div/div/div[2]/div[1]/div[2]/span[2]/text()')
+        bizS = tree.xpath('//*[@id="super-container"]/div/div[2]/div[1]/div/div[4]/ul[2]/li['+str(i)+ \
+                               ']/div/div/div/div[2]/div[1]/div[2]/address/text()')
+        bizName.append(bizN)
+        bizPhone.append(bizP)
+        bizStreet.append(bizS)
+        
+bizInfo = pd.DataFrame(bizName)
+bizInfo ['Phone'] = bizPhone
+bizInfo ['Street'] = bizStreet
