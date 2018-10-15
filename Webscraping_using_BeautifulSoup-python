@@ -1,0 +1,58 @@
+%config IPcompleter.greedy = True
+import pandas as pd
+import numpy as np
+import requests
+from lxml import html
+
+from bs4 import BeautifulSoup
+def soup_start(url):
+    source = requests.get(url).text
+    soup = BeautifulSoup(source, 'lxml')
+    return soup
+    
+bizName = []
+bizPhone = []
+bizStreet = []
+for j in range(0,181,30):
+    url = 'https://www.yelp.com/search?find_loc=Chicago,+IL&start='+str(j)+'&cflt=indpak'
+    soup = soup_start(url)
+    print (url)
+    for  bizIn in soup.find_all('div', class_ = 'media-block media-block--18'):
+        try:
+            bizN = bizIn.find('a', class_ = 'biz-name js-analytics-click').text
+            bizP = bizIn.find('span', class_ = 'biz-phone').text
+            bizS = bizIn.find('div', class_ = 'secondary-attributes').find('address').text
+
+            bizName.append(bizN)
+            bizPhone.append(bizP)
+            bizStreet.append(bizS)
+            
+        except AttributeError:
+            try:
+                bizN = bizIn.find('a', class_ = 'biz-name js-analytics-click').text
+                bizP = 'NOT AVAILABLE'
+                bizS = bizIn.find('div', class_ = 'secondary-attributes').find('address').text
+
+                bizName.append(bizN)
+                bizPhone.append(bizP)
+                bizStreet.append(bizS)
+                
+            except AttributeError:
+                bizN = bizIn.find('a', class_ = 'biz-name js-analytics-click').text
+                bizP = bizIn.find('span', class_ = 'biz-phone').text
+                bizS = 'NOT AVAILABLE'
+
+                bizName.append(bizN)
+                bizPhone.append(bizP)
+                bizStreet.append(bizS)
+                
+                
+bizInfo = pd.DataFrame(bizName)
+bizInfo ['Phone'] = bizPhone
+bizInfo ['Street'] = bizStreet
+
+for i in range(len(bizInfo)):
+    bizInfo.iloc[i,1] = bizInfo.iloc[i,1].replace('\n', '')
+    bizInfo.iloc[i,2] = bizInfo.iloc[i,2].replace('\n', '')
+
+bizInfo.to_csv('Restaurant List.csv')
